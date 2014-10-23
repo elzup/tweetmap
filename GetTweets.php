@@ -8,8 +8,8 @@ $connection = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, OAUTH_TOKEN, OAUTH
 $connection->host = 'https://api.twitter.com/1.1/';
 //var_dump($connection);
 $lat = "35.749412";
-$long = 139.805108;
-$r = '1km';
+$long = "139.805108";
+$r = '100km';
 $params = array(
     'geocode' => implode(',', array($lat, $long, $r)),
 );
@@ -27,6 +27,19 @@ $res = $connection->get($query, $params);
 //    }
 //}
 
+$tweets = $res->statuses;
+$params = array(
+    'q' => 'I\'m at 北千住',
+);
+$query = 'search/tweets';
+$res = $connection->get($query, $params);
+$tweets_4s = array();
+foreach ($res->statuses as $st) {
+//    var_dump($st);
+    if (strpos($st->source, 'square') !== FALSE && !isset($st->geo)) {
+        $tweets_4s[] = $st;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -46,7 +59,7 @@ src="http://maps.googleapis.com/maps/api/js?key=<?= GOOGLE_API_KEY ?>&sensor=TRU
       function initialize() {
         var mapOptions = {
         center: new google.maps.LatLng(<?= $lat ?>, <?= $long ?>),
-          zoom: 17,
+          zoom: 13,
           mapTypeId: google.maps.MapTypeId.ROADMAP
         };
         var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
@@ -54,15 +67,31 @@ src="http://maps.googleapis.com/maps/api/js?key=<?= GOOGLE_API_KEY ?>&sensor=TRU
         var geocoder = new google.maps.Geocoder();
 <?php 
 $locs = array();
-foreach ($res->statuses as $st) { 
-if (!isset($st->geo) || $st->geo->type != 'Point') continue;
+$locs_4s = array();
+foreach ($tweets as $i => $st) { 
+    if (!isset($st->geo)) continue;
     $locs[] = '["' . str_replace(array('"', '”', '“', "\n"), array('\\"', '\\"', '\\"', ' '), $st->text) . '", ' . $st->geo->coordinates[0] . ', ' . $st->geo->coordinates[1] . ']';
-}?>
+}
+
+//foreach ($tweets_4s as $st) { 
+//    if (!isset($st->geo) || $st->geo->type != 'Point') continue;
+//    $locs_4s[] = '["' . str_replace(array('"', '”', '“', "\n"), array('\\"', '\\"', '\\"', ' '), $st->text) . '", ' . $lat . ', ' . $long . ']';
+//}
+
+?>
+console.log(<?= implode(',', $locs)?>);
 var locations = [<?= implode(',', $locs)?>];
 console.log(locations);
+var locations_4s = [<?= implode(',', $locs_4s)?>];
     for (i = 0; i < locations.length; i++) {
+      var pinColor = "FF0000";
+      var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + pinColor,
+          new google.maps.Size(21, 34),
+        new google.maps.Point(0,0),
+        new google.maps.Point(10, 34));
       marker = new google.maps.Marker({
         position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+        icon: pinImage,
         map: map
     });
 
