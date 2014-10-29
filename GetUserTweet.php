@@ -31,7 +31,8 @@ function get_user_tweets($tweets) {
             if (!isset($st->geo)) {
                 continue;
             }
-            $st->time = date('Hi', strtotime($st->created_at));
+            $st->timestamp = strtotime($st->created_at);
+            $st->time = date('Hi', $st->timestamp);
             $user_tweets[$user_id][] = $st;
         }
     }

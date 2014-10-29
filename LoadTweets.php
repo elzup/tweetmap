@@ -1,8 +1,15 @@
 <?php
 
-function get_tweets_db($count = 180) {
+function get_tweets_db($count = 180, $since_id = 0) {
     $pdo = new PDO(DB_DSN, DB_USER, DB_PASS);
     $dm = new FireworksModel($pdo);
-    $tweets = $dm->select_geo_tweets($count);
+    $tweets = $dm->select_geo_tweets($count, $since_id);
+    return $tweets;
+}
+
+function get_second_tweets_db($count = 180) {
+    $pdo = new PDO(DB_DSN, DB_USER, DB_PASS);
+    $dm = new FireworksModel($pdo);
+    $tweets = $dm->select_second_tweets($count);
     return $tweets;
 }

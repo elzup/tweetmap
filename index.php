@@ -17,8 +17,8 @@ require_once('./FireworksModel.php');
 require_once('./LoadTweets.php');
 require_once('./Funcs.php');
 
-$tweets = get_tweets_db(100);
-$user_tweets = get_user_tweets($tweets);
+$type = @$_GET['type'];
+$user_tweets = get_second_tweets_db(100);
 
 // 藤沢市
 $lat = "35.3266269";
@@ -62,6 +62,7 @@ foreach ($user_tweets as $user_id => $statuses) {
         $tweets_params[] = $st->geo->coordinates[0];
         $tweets_params[] = $st->geo->coordinates[1];
         $tweets_params[] = $st->time;
+        $tweets_params[] = '"' . escape_js_string($st->text) . '"';
         $user_params[] = '[' . implode(',', $tweets_params) . ']';
     }
     $locs[] = '[' . implode(',', $user_params) . ']';
@@ -76,13 +77,13 @@ $locations_text = '[' . implode(',', $locs) . ']';
 ?>
 var user_locs = <?= $locations_text?>;
 console.log(user_locs);
-for (var i = 0; i < user_locs.length; i++) {
-    var user_id = user_locs[i][0];
+for (var k = 0; k < user_locs.length; k++) {
+    var user_id = user_locs[k][0];
     var pre_x = -1, pre_y = -1;
-    for (var j = 1; j < user_locs[i].length; j++) {
-        var x = user_locs[i][j][0];
-        var y = user_locs[i][j][1];
-        var time = user_locs[i][j][2];
+    for (var j = 1; j < user_locs[k].length; j++) {
+        var x = user_locs[k][j][0];
+        var y = user_locs[k][j][1];
+        var time = user_locs[k][j][2];
         var col = time_to_color(time);
         var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + col,
             new google.maps.Size(21, 34),
@@ -109,12 +110,13 @@ for (var i = 0; i < user_locs.length; i++) {
         }
         pre_x = x;
         pre_y = y;
-        google.maps.event.addListener(marker, 'click', (function(marker, i) {
+        google.maps.event.addListener(marker, 'click', (function(marker, user_lock, k, j, time) {
             return function() {
-                infowindow.setContent(user_locs[i][j][0]);
+                console.log(k + ":" + j);
+                infowindow.setContent(user_locs[k][j][3] + "[" + time + "]");
                 infowindow.open(map, marker);
             }
-        })(marker, i));
+        })(marker, user_locs, k, j, time));
     }
 }
 }
@@ -124,10 +126,10 @@ function time_to_color(time) {
      */
     if (time < 1800) {
         var hex = ("0" + Math.floor(255 - (time / 1800) * 255).toString(16)).slice(-2);
-        return "FF" + "" + hex + "" + hex;
+        return "FF" + hex + "" + hex;
     } else if (time >= 1900) {
-        var hex = ("0" + Math.floor(255 - ((1900 - time) / 500) * 255).toString(16)).slice(-2);
-        return "FF" + "" + hex + "" + hex;
+        var hex = ("0" + Math.floor(255 - ((1900 - time) / 400) * 255).toString(16)).slice(-2);
+        return hex + "0000";
     }
     return "FF0000";
 }
@@ -135,6 +137,9 @@ function time_to_color(time) {
 </script>
   </head>
   <body onload="initialize()">
+    <div>
+      <p>薄 → 18:00 赤 19:00 → 濃</p>
+    </div>
     <div id="map_canvas" style="width:100%; height:100%"></div>
   </body>
 </html>

@@ -1,6 +1,5 @@
 keys.php
-
-
+memory.txt
 env*
 tags
 composer.lock
