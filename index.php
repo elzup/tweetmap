@@ -17,7 +17,7 @@ require_once('./FireworksModel.php');
 require_once('./LoadTweets.php');
 require_once('./Funcs.php');
 
-$tweets = get_tweets_db(2);
+$tweets = get_tweets_db(100);
 $user_tweets = get_user_tweets($tweets);
 
 // 藤沢市
@@ -48,10 +48,10 @@ function initialize() {
     center: new google.maps.LatLng(<?= $lat ?>, <?= $long ?>),
         zoom: 10,
         mapTypeId: google.maps.MapTypeId.ROADMAP
-};
-var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-var infowindow = new google.maps.InfoWindow();
-var geocoder = new google.maps.Geocoder();
+    };
+    var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+    var infowindow = new google.maps.InfoWindow();
+    var geocoder = new google.maps.Geocoder();
 <?php 
 $locs = array();
 foreach ($user_tweets as $user_id => $statuses) {
@@ -61,6 +61,7 @@ foreach ($user_tweets as $user_id => $statuses) {
         $tweets_params = array();
         $tweets_params[] = $st->geo->coordinates[0];
         $tweets_params[] = $st->geo->coordinates[1];
+        $tweets_params[] = $st->time;
         $user_params[] = '[' . implode(',', $tweets_params) . ']';
     }
     $locs[] = '[' . implode(',', $user_params) . ']';
@@ -79,9 +80,10 @@ for (var i = 0; i < user_locs.length; i++) {
     var user_id = user_locs[i][0];
     var pre_x = -1, pre_y = -1;
     for (var j = 1; j < user_locs[i].length; j++) {
-        var col = "FF0000";
         var x = user_locs[i][j][0];
         var y = user_locs[i][j][1];
+        var time = user_locs[i][j][2];
+        var col = time_to_color(time);
         var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + col,
             new google.maps.Size(21, 34),
             new google.maps.Point(0,0),
@@ -99,7 +101,7 @@ for (var i = 0; i < user_locs.length; i++) {
             var flightPath = new google.maps.Polyline({
                 path: points,
                 geodesic: true,
-                strokeColor: col,
+                strokeColor: "#" + col,
                 strokeOpacity: 1.0,
                 strokeWeight: 5
             });
@@ -115,6 +117,19 @@ for (var i = 0; i < user_locs.length; i++) {
         })(marker, i));
     }
 }
+}
+function time_to_color(time) {
+    /*
+    1800 ~ 1900 メイン
+     */
+    if (time < 1800) {
+        var hex = ("0" + Math.floor(255 - (time / 1800) * 255).toString(16)).slice(-2);
+        return "FF" + "" + hex + "" + hex;
+    } else if (time >= 1900) {
+        var hex = ("0" + Math.floor(255 - ((1900 - time) / 500) * 255).toString(16)).slice(-2);
+        return "FF" + "" + hex + "" + hex;
+    }
+    return "FF0000";
 }
 
 </script>

@@ -3,7 +3,6 @@
 class FireworksModel {
 
     private $dbh;
-
     public function __construct(PDO $dbh) {
         $this->dbh = $dbh;
     }
