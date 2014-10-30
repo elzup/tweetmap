@@ -18,7 +18,7 @@ require_once('./SaveTweets.php');
 require_once('./Funcs.php');
 
 $start_id = trim(file_get_contents('./memory.txt'));
-$tweets = get_tweets_db(140, $start_id);
+$tweets = get_tweets_db(100, $start_id);
 if (!count($tweets)) {
     die("no tweet");
 }

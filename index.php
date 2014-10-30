@@ -18,7 +18,7 @@ require_once('./LoadTweets.php');
 require_once('./Funcs.php');
 
 $type = @$_GET['type'];
-$user_tweets = get_second_tweets_db(100);
+$user_tweets = get_second_tweets_db(100, $type);
 
 // 藤沢市
 $lat = "35.3266269";
