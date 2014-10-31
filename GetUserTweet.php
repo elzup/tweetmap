@@ -23,6 +23,10 @@ function get_user_tweets($tweets) {
         $query = 'statuses/user_timeline';
         $res = $connection->get($query, $params);
 //        var_dump($res);
+        if (isset($res->errors)) {
+            var_dump($res->errors);
+            break;
+        }
         if (!count($res)) {
             continue;
         }

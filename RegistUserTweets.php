@@ -17,14 +17,15 @@ require_once('./LoadTweets.php');
 require_once('./SaveTweets.php');
 require_once('./Funcs.php');
 
-$start_id = trim(file_get_contents('./memory.txt'));
-$tweets = get_tweets_db(100, $start_id);
+$start_id = trim(file_get_contents('./memory2.txt'));
+$tweets = get_tweets_db_hot(90, $start_id);
 if (!count($tweets)) {
     die("no tweet");
 }
 $st = end($tweets);
 $end_id = $st->id;
 reset($tweets);
+exit;
 $user_tweets = get_user_tweets($tweets);
-save_tweets_db($user_tweets);
-file_put_contents('./memory.txt', $end_id);
+save_tweets_db($user_tweets, TRUE);
+file_put_contents('./memory2.txt', $end_id);

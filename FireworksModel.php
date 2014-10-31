@@ -8,9 +8,9 @@ class FireworksModel {
         $this->dbh = $dbh;
     }
 
-    public function select_second_tweets_hot() {
+    public function select_second_tweets_hot($user_count = 100) {
         // TODO:
-        $sql = "select * from `ff_second_tweets` where `user_id` in ( select `_id` from `ff_users` where `_id` in ( select `user_id` from `ff_second_tweets` where `timestamp` between '2014-10-18 18:00:00' and '2014-10-18 17:00:00')) limit ";
+        $sql = "select * from `ff_second_tweets` where `user_id` in ( select * from (select `_id` from `ff_users` where `_id` in ( select `user_id` from `ff_second_tweets` where `is_watch` = 1 and `timestamp` between '2014-10-18 18:00:00' and '2014-10-18 19:00:00') limit " . $user_count . ") as t)";
         $stmt = $this->dbh->prepare($sql);
         $stmt->execute();
         $tweets = array();
@@ -33,7 +33,7 @@ class FireworksModel {
 
     public function select_second_tweets($user_count = 100) {
         // TODO:
-        $sql = "select * from ff_second_tweets where (user_id <= " . $user_count . ")";
+        $sql = "select * from `ff_second_tweets` where `user_id` in ( select * from (select `_id` from `ff_users` limit " . $user_count . ") as t)";
         $stmt = $this->dbh->prepare($sql);
         $stmt->execute();
         $tweets = array();
@@ -54,7 +54,26 @@ class FireworksModel {
         return $tweets;
     }
 
-    
+    /**
+     * 花火打ち上げの時間帯に花火周辺でされたツイート
+     */
+    public function select_geo_tweets_hot($count = 180, $since_id = 0) {
+        echo $sql = "select * from ff_tweets where (`geo_lat` IS NOT NULL and `place` = 1 and `_id` > " . $since_id . " and `timestamp` between '2014-10-18 18:00:00' and '2014-10-18 19:00:00') order by _id limit " . $count;
+        $stmt = $this->dbh->prepare($sql);
+        $stmt->execute();
+        $tweets = array();
+        while($res = $stmt->fetch()) {
+            $st = new stdclass();
+            $st->id = $res["_id"];
+            $st->geo = new stdclass();
+            $st->geo->coordinates = array($res["geo_lat"], $res["geo_lon"]);
+            echo $st->text = $res["tweet_text"];
+            echo PHP_EOL;
+            $st->user_id = $res["user_id"];
+            $tweets[] = $st;
+        }
+        return $tweets;
+    }
     public function select_geo_tweets($count = 180, $since_id = 0) {
         // GEO情報の付いているツイートのみ
         $sql = "select * from ff_tweets where (`geo_lat` IS NOT NULL and `place` = 1 and `_id` > " . $since_id . " and `timestamp` between '2014-10-18 00:00:00' and '2014-10-18 23:59:59') order by _id limit " . $count;
@@ -73,9 +92,9 @@ class FireworksModel {
         return $tweets;
     }
 
-    public function regist_second_tweets($tweets) {
+    public function regist_second_tweets($tweets, $is_watch) {
         foreach ($tweets as $user_id => $statuses) {
-            $user_id = $this->regist_user($user_id);
+            $user_id = $this->regist_user($user_id, $is_watch);
             foreach ($statuses as $st) {
                 $this->regist_second_tweet($user_id, $st);
             }
@@ -97,12 +116,13 @@ class FireworksModel {
         $stmt->execute($params);
     }
 
-    public function regist_user($twitter_user_id) {
+    public function regist_user($twitter_user_id, $is_watch) {
 //        echo "regist_user \n";
-        $sql = "insert into `ff_users` (`twitter_user_id`) values(:ID)";
+        $sql = "insert into `ff_users` (`twitter_user_id`, `is_watch`) values(:ID, :IS_WATCH)";
         $stmt = $this->dbh->prepare($sql);
         $params = array(
             ':ID' => $twitter_user_id,
+            ':IS_WATCH' => $is_watch,
         );
         $stmt->execute($params);
         return $this->dbh->lastInsertId();
