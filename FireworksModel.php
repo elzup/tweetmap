@@ -55,10 +55,24 @@ class FireworksModel {
     }
 
     /**
+     * 花火打ち上げの時間帯に花火周辺でツイートしたuserid一覧
+     */
+    public function select_geo_users($count = 180, $since_id = 0) {
+        $sql = "select distinct user_id from ff_tweets where (`geo_lat` IS NOT NULL and `place` < 2 and `timestamp` between '2014-10-18 18:00:00' and '2014-10-18 19:00:00') order by _id";
+        $stmt = $this->dbh->prepare($sql);
+        $stmt->execute();
+        $users = array();
+        while($res = $stmt->fetch()) {
+            $users[] = $res["user_id"];
+        }
+        return $users;
+    }
+
+    /**
      * 花火打ち上げの時間帯に花火周辺でされたツイート
      */
     public function select_geo_tweets_hot($count = 180, $since_id = 0) {
-        echo $sql = "select * from ff_tweets where (`geo_lat` IS NOT NULL and `place` = 1 and `_id` > " . $since_id . " and `timestamp` between '2014-10-18 18:00:00' and '2014-10-18 19:00:00') order by _id limit " . $count;
+        $sql = "select * from ff_tweets where (`geo_lat` IS NOT NULL and `place` = 1 and `_id` > " . $since_id . " and `timestamp` between '2014-10-18 18:00:00' and '2014-10-18 19:00:00') order by _id limit " . $count;
         $stmt = $this->dbh->prepare($sql);
         $stmt->execute();
         $tweets = array();
